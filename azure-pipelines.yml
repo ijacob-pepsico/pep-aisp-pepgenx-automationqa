@@ -1,0 +1,71 @@
+trigger:
+  branches:
+    include:
+      - '*'
+
+variables:
+  CSV_FILE_PATH: '$(Build.SourcesDirectory)/api_details.csv'
+  REPORTS_FOLDER: '$(Build.ArtifactStagingDirectory)/reports'
+
+pool:
+  name: pep-eiap-nonprod-eus-infra-02-aks-agents
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.8'
+    addToPath: true
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '16.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    sudo apt-get update
+    sudo apt-get install -y python3-tk
+    python -m pip install --upgrade pip
+  displayName: 'Install dependencies'
+
+- script: |
+    cd $(Build.SourcesDirectory)
+    mkdir -p reports
+    npm install newman newman-reporter-htmlextra
+  displayName: 'Install Newman and htmlextra reporter'
+
+- script: |
+    cd $(Build.SourcesDirectory)
+    npm cache clean --force
+    npm install --no-bin-links
+  displayName: 'Clean npm cache and reinstall packages'
+
+- script: |
+    echo "CSV file path: $(CSV_FILE_PATH)"
+    echo "Reports folder: $(REPORTS_FOLDER)"
+    python Orchestrator.py
+  env:
+    CSV_FILE_PATH: $(CSV_FILE_PATH)
+    REPORTS_FOLDER: $(REPORTS_FOLDER)
+  displayName: 'Run your script'
+
+# List contents of the source directory
+- script: |
+    echo "Listing contents of $(Build.SourcesDirectory)"
+    ls -la $(Build.SourcesDirectory)
+  displayName: 'List contents of source directory'
+
+# List HTML report files
+- script: |
+    echo "Listing HTML report files in $(Build.ArtifactStagingDirectory)/reports"
+    ls -la $(Build.ArtifactStagingDirectory)/reports
+  displayName: 'List HTML report files'
+
+# Publish HTML test reports
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/reports'
+    artifactName: 'TestReports'
+    publishLocation: 'Pipeline'
+    reportTitle: 'PepGenX Test Report'
+    tabName: 'Postman Report'
+  displayName: 'Publish HTML Test Reports'

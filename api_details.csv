@@ -1,0 +1,4 @@
+﻿API Name,API Collection Path,API Data File Path,API Environment Path
+PepGenX,PepGenX/PepGenXInstrumentationEnv2.postman_collection.json,PepGenX/DataFile.csv,PepGenX/QA.postman_environment.json
+LLM,PepGenX/LLMGenericTest.postman_collection.json,PepGenX/LLMTestData.csv,PepGenX/QA.postman_environment.json
+AgentAAS,PepGenX/AgentAAS_collection.postman_collection.json,,PepGenX/QA_Environment.postman_environment.json
